@@ -1,0 +1,151 @@
+/* Reset and base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Inter', sans-serif;
+}
+
+body {
+  background-color: #1a1f3a; /* Dark blue background from Index.png */
+  color: #ffffff;
+  line-height: 1.6;
+}
+
+/* Header and Navigation */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background-color: #1a1f3a;
+  border-bottom: 1px solid #2d3a5f;
+}
+
+.logo {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.nav {
+  display: flex;
+  gap: 20px;
+}
+
+.nav-item {
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 1.1rem;
+  transition: color 0.3s ease;
+}
+
+.nav-item:hover {
+  color: #a0b0ff;
+}
+
+.profile-dropdown {
+  position: relative;
+}
+
+.profile-dropdown.active::after {
+  content: '';
+  position: absolute;
+  /* Add dropdown menu styling here if needed */
+}
+
+/* Content Section */
+.content {
+  max-width: 1200px;
+  margin: 50px auto;
+  text-align: center;
+  padding: 0 20px;
+}
+
+.welcome-title {
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+  color: #ffffff;
+}
+
+.welcome-text {
+  font-size: 1.2rem;
+  margin-bottom: 30px;
+  color: #a0b0ff;
+}
+
+.start-button {
+  display: inline-block;
+  padding: 15px 30px;
+  background-color: #4a5eb5;
+  color: #ffffff;
+  text-decoration: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  transition: background-color 0.3s ease;
+}
+
+.start-button:hover {
+  background-color: #5a6ec5;
+}
+
+/* Features Section */
+.features {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-top: 50px;
+  flex-wrap: wrap;
+}
+
+.feature-card {
+  background-color: #2d3a5f;
+  padding: 20px;
+  border-radius: 10px;
+  width: 300px;
+  text-align: left;
+}
+
+.feature-card h2 {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+  color: #ffffff;
+}
+
+.feature-card p {
+  font-size: 1rem;
+  color: #a0b0ff;
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  padding: 20px;
+  background-color: #1a1f3a;
+  border-top: 1px solid #2d3a5f;
+  color: #a0b0ff;
+  font-size: 0.9rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .nav {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .features {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .feature-card {
+    width: 100%;
+    max-width: 400px;
+  }
+}

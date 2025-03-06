@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="../css/registerstyle.css">
+  <title>Регистрация | CryptoX</title>
+</head>
+<body>
+  <div class="logo">CryptoX</div>
+
+  <div class="login">
+      <h1>Регистрация</h1>
+      <form id="register-form">
+          <input type="text" name="username" placeholder="Логин" maxlength="15" required>
+          <input type="email" name="email" placeholder="Почта" maxlength="25" required>
+          <input type="password" name="password" placeholder="Пароль" maxlength="15" required>
+          <button type="submit">Зарегистрироваться</button>
+      </form>
+      <div class="links">
+          <a href="login.html">Есть аккаунт?</a>
+      </div>
+      <p id="error-message" style="color: red; display: none;"></p>
+  </div>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const registerForm = document.querySelector("#register-form");
+        const errorMessage = document.querySelector("#error-message");
+  
+        registerForm.addEventListener("submit", async (e) => {
+          e.preventDefault(); 
+  
+          const username = e.target.username.value.trim();
+          const email = e.target.email.value.trim();
+          const password = e.target.password.value.trim();
+  
+          if (!username || !email || !password) {
+            alert("Заполните все поля!");
+            return;
+          }
+  
+          try {
+            const response = await fetch("http://localhost:5000/api/register", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ username, email, password })
+            });
+  
+            const data = await response.json();
+  
+            if (response.ok) {
+              alert("Регистрация успешна!");
+              window.location.href = "login.html"; // Перенаправление на страницу входа
+            } else {
+              errorMessage.textContent = data.message;
+              errorMessage.style.display = "block";
+            }
+          } catch (error) {
+            console.error("Ошибка запроса:", error);
+            errorMessage.textContent = "Ошибка сервера. Попробуйте позже.";
+            errorMessage.style.display = "block";
+          }
+        });
+      });
+    </script>
+  </body>
+  </html>
+  
+
+</body>
+</html>

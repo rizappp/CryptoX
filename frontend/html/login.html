@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="../css/loginstyle.css">
+  <title>Вход | CryptoX</title>
+</head>
+<body>
+  <div class="logo">CryptoX</div>
+  <div class="back"><a href="index.html">Назад</a></div>
+  <div class="login">
+      <h1>Вход</h1>
+      <form id="login-form">
+          <input type="text" name="username" placeholder="Логин" maxlength="15" required>
+          <input type="password" name="password" placeholder="Пароль" maxlength="15" required>
+          <button type="submit">Войти</button>
+      </form>
+      <div class="links">
+          <a href="#">Забыли пароль?</a> | <a href="register.html">Нет аккаунта?</a>
+      </div>
+      <p id="error-message" style="color: red; display: none;"></p>
+  </div>
+
+  <script>
+    document.getElementById("login-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const username = document.querySelector("input[name='username']").value.trim();
+        const password = document.querySelector("input[name='password']").value.trim();
+        const errorMessage = document.getElementById("error-message");
+
+        if (!username || !password) {
+            errorMessage.textContent = "Введите логин и пароль!";
+            errorMessage.style.display = "block";
+            return;
+        }
+
+        try {
+  const response = await fetch("http://localhost:5000/api/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password })
+  });
+
+  const data = await response.json();
+  console.log("Login response data:", data); // Debug log
+
+  if (response.ok) {
+    localStorage.setItem("id", data.id); // Store id
+    window.location.href = "index.html"; // Redirect to homepage
+  } else {
+    errorMessage.textContent = data.message;
+    errorMessage.style.display = "block";
+  }
+} catch (error) {
+  console.error("Ошибка запроса:", error);
+  errorMessage.textContent = "Ошибка сервера. Попробуйте позже.";
+  errorMessage.style.display = "block";
+}
+    });
+  </script>
+
+  <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'91a88f427e46b0ed',t:'MTc0MDk5ODg4Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

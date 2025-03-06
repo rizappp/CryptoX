@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/indexstyle.css">
+  <title>Главная | CryptoX</title>
+</head>
+<body>
+  <div class="main">
+    <div class="header">
+      <div class="logo">CryptoX</div>
+      <nav class="nav">
+        <a href="market.html" class="nav-item">Биржа</a>
+        <a href="#" class="nav-item">Сохраненные пары</a>
+        <a href="#" class="nav-item">График</a>
+          <a href="profile.html" class="nav-item">Профиль</a>
+      </nav>
+    </div>
+
+    <div class="content">
+      <h1 class="welcome-title">Добро пожаловать в CryptoX</h1>
+      <p class="welcome-text">Ваш надежный инструмент для анализа и визуализации криптовалютных данных.</p>
+      <a href="login.html" class="start-button">Начать сейчас</a>
+
+      <div class="features">
+        <div class="feature-card">
+          <h2>Анализ в реальном времени</h2>
+          <p>Получайте актуальные данные о ценах, объемах и изменениях на рынке криптовалют.</p>
+        </div>
+        <div class="feature-card">
+          <h2>Персонализованные рекомендации</h2>
+          <p>Рекомендации помогут вам принимать осознанные решения.</p>
+        </div>
+        <div class="feature-card">
+          <h2>Визуализация данных</h2>
+          <p>Графики и диаграммы для лучшего понимания рыночных трендов.</p>
+        </div>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <p>© 2025 CryptoX. Все права защищены.</p>
+    </footer>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const profileDropdown = document.querySelector(".profile-dropdown");
+      profileDropdown.addEventListener("click", (e) => {
+        e.preventDefault();
+        profileDropdown.classList.toggle("active");
+      });
+    });
+  </script>
+</body>
+</html>
