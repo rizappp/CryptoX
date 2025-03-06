@@ -8,64 +8,74 @@
 </head>
 <body>
   <div class="logo">CryptoX</div>
-
   <div class="login">
       <h1>Регистрация</h1>
       <form id="register-form">
           <input type="text" name="username" placeholder="Логин" maxlength="15" required>
           <input type="email" name="email" placeholder="Почта" maxlength="25" required>
           <input type="password" name="password" placeholder="Пароль" maxlength="15" required>
-          <button type="submit">Зарегистрироваться</button>
+          <button type="submit" id="submitButton">Зарегистрироваться</button>
       </form>
       <div class="links">
-          <a href="login.html">Есть аккаунт?</a>
+          <a href="/login.html">Есть аккаунт?</a>
       </div>
       <p id="error-message" style="color: red; display: none;"></p>
   </div>
-    <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        const registerForm = document.querySelector("#register-form");
-        const errorMessage = document.querySelector("#error-message");
-  
-        registerForm.addEventListener("submit", async (e) => {
-          e.preventDefault(); 
-  
-          const username = e.target.username.value.trim();
-          const email = e.target.email.value.trim();
-          const password = e.target.password.value.trim();
-  
-          if (!username || !email || !password) {
-            alert("Заполните все поля!");
-            return;
-          }
-  
-          try {
-            const response = await fetch("http://localhost:5000/api/register", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ username, email, password })
-            });
-  
-            const data = await response.json();
-  
-            if (response.ok) {
-              alert("Регистрация успешна!");
-              window.location.href = "login.html"; // Перенаправление на страницу входа
-            } else {
-              errorMessage.textContent = data.message;
-              errorMessage.style.display = "block";
-            }
-          } catch (error) {
-            console.error("Ошибка запроса:", error);
-            errorMessage.textContent = "Ошибка сервера. Попробуйте позже.";
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const registerForm = document.querySelector("#register-form");
+      const errorMessage = document.querySelector("#error-message");
+      const submitButton = document.getElementById("submitButton");
+
+      registerForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const username = e.target.username.value.trim();
+        const email = e.target.email.value.trim();
+        const password = e.target.password.value.trim();
+
+        if (!username || !email || !password) {
+          errorMessage.textContent = "Заполните все поля!";
+          errorMessage.style.display = "block";
+          return;
+        }
+
+        // Блокируем кнопку
+        submitButton.disabled = true;
+        submitButton.textContent = "Подождите...";
+
+        try {
+          const response = await fetch("http://localhost:5000/api/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, email, password })
+          });
+          const data = await response.json();
+
+          if (response.ok) {
+            localStorage.setItem("emailToVerify", email); // Сохраняем email для проверки
+            errorMessage.textContent = "Код отправлен на вашу почту!";
+            errorMessage.style.color = "green";
+            errorMessage.style.display = "block";
+            setTimeout(() => {
+              window.location.href = "/verify-email.html";
+            }, 2000);
+          } else {
+            errorMessage.textContent = data.message;
+            errorMessage.style.color = "red";
             errorMessage.style.display = "block";
           }
-        });
+        } catch (error) {
+          console.error("Ошибка запроса:", error);
+          errorMessage.textContent = "Ошибка сервера. Попробуйте позже.";
+          errorMessage.style.display = "block";
+        } finally {
+          setTimeout(() => {
+            submitButton.disabled = false;
+            submitButton.textContent = "Зарегистрироваться";
+          }, 5000); // Разблокировка через 5 секунд
+        }
       });
-    </script>
-  </body>
-  </html>
-  
-
+    });
+  </script>
 </body>
 </html>

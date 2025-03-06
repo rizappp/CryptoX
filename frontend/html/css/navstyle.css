@@ -1,0 +1,118 @@
+/* Reset and base styles for navigation */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+}
+
+body {
+    background-color: #1a1f3a;
+    color: #ffffff;
+    line-height: 1.6;
+}
+
+/* Header and Navigation */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background-color: #1a1f3a;
+    border-bottom: 1px solid #2d3a5f;
+}
+
+.logo {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.nav {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.nav-item {
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 1.1rem;
+    transition: color 0.3s ease;
+}
+
+.nav-item:hover, .nav-item.active {
+    color: #a0b0ff;
+}
+
+/* Dropdown Styles */
+.profile-dropdown {
+    position: relative;
+}
+
+.dropdown-toggle {
+    cursor: pointer;
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: linear-gradient(135deg, #2d3a5f 0%, #4a5eb5 100%);
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    min-width: 150px;
+    padding: 10px 0;
+    z-index: 10;
+}
+
+.profile-dropdown:hover .dropdown-menu {
+    display: block;
+}
+
+.dropdown-item {
+    display: block;
+    padding: 8px 15px;
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 1rem;
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.dropdown-item:hover {
+    background-color: #3d4a6f;
+}
+
+.logout-dropdown {
+    color: #f44336;
+}
+
+.logout-dropdown:hover {
+    background-color: #da3c2f;
+    color: #ffffff;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .header {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .nav {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .dropdown-menu {
+        position: static;
+        width: 100%;
+        text-align: center;
+    }
+}

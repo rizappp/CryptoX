@@ -64,7 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <td class="price-change ${crypto.change24h >= 0 ? 'positive' : 'negative'}">
           ${crypto.change24h.toFixed(2)}%
         </td>
-        <td>$${crypto.volume.toLocaleString()}M</td>
+        <td>$${crypto.volume.toLocaleString()}</td>
       `;
       cryptoList.appendChild(row);
     });

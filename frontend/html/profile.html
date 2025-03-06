@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/navstyle.css">
   <link rel="stylesheet" href="/css/profilestyle.css">
   <title>Профиль | CryptoX</title>
 </head>
@@ -15,7 +16,13 @@
         <a href="/market.html" class="nav-item">Биржа</a>
         <a href="#" class="nav-item">Сохраненные пары</a>
         <a href="#" class="nav-item">График</a>
-        <a href="/profile.html" class="nav-item">Профиль</a>
+        <div class="profile-dropdown">
+          <span class="nav-item dropdown-toggle">Профиль</span>
+          <div class="dropdown-menu">
+            <a href="/profile.html" class="dropdown-item">Перейти в профиль</a>
+            <button id="logoutDropdown" class="dropdown-item logout-dropdown">Выйти из аккаунта</button>
+          </div>
+        </div>
       </nav>
     </div>
 
@@ -46,7 +53,9 @@
           <div class="buttons">
             <button type="button" id="editButton" class="edit-button">Изменить данные</button>
             <button type="submit" id="saveButton" class="save-button" style="display: none;">Сохранить</button>
-            <button type="button" id="logoutButton" class="logout-button">Выйти</button>
+          </div>
+          <div class="delete-section">
+            <button type="button" id="deleteButton" class="delete-button">Удалить аккаунт</button>
           </div>
         </form>
       </div>

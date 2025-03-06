@@ -6,54 +6,6 @@
   font-family: 'Inter', sans-serif;
 }
 
-body {
-  background-color: #1a1f3a; /* Dark blue background from Index.png */
-  color: #ffffff;
-  line-height: 1.6;
-}
-
-/* Header and Navigation */
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px;
-  background-color: #1a1f3a;
-  border-bottom: 1px solid #2d3a5f;
-}
-
-.logo {
-  font-size: 2rem;
-  font-weight: 800;
-  color: #ffffff;
-}
-
-.nav {
-  display: flex;
-  gap: 20px;
-}
-
-.nav-item {
-  color: #ffffff;
-  text-decoration: none;
-  font-size: 1.1rem;
-  transition: color 0.3s ease;
-}
-
-.nav-item:hover {
-  color: #a0b0ff;
-}
-
-.profile-dropdown {
-  position: relative;
-}
-
-.profile-dropdown.active::after {
-  content: '';
-  position: absolute;
-  /* Add dropdown menu styling here if needed */
-}
-
 /* Content Section */
 .content {
   max-width: 1200px;
@@ -129,16 +81,6 @@ body {
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .header {
-    flex-direction: column;
-    gap: 20px;
-  }
-
-  .nav {
-    flex-direction: column;
-    text-align: center;
-  }
-
   .features {
     flex-direction: column;
     align-items: center;
