@@ -79,6 +79,11 @@
   font-size: 0.9rem;
 }
 
+.CryptoX {
+  text-decoration: none;
+  color: white;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .features {

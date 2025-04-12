@@ -2,20 +2,40 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const path = require('path');
+const { Client } = require('pg');
 const registerRoute = require('./routes/registerRoute');
 const loginRoute = require('./routes/loginRoute');
 const userRoute = require('./routes/userRoutes');
-const authMiddleware = require('./middleware/auth');
+const cryptoRoutes = require('./routes/cryptoRoutes');
+const authMiddlewareFactory = require('./middleware/auth'); // Renamed for clarity
+
+// Load environment variables
+require('dotenv').config();
 
 const app = express();
 
+// Configure PostgreSQL client using DATABASE_URL from .env
+const client = new Client({
+  connectionString: process.env.DATABASE_URL,
+});
+
+client.connect()
+  .then(() => console.log("Connected to PostgreSQL"))
+  .catch(err => console.error("Database connection error:", err));
+
+// Create the authMiddleware by passing the client
+const authMiddleware = authMiddlewareFactory(client);
+
+// Log to verify
+console.log('authMiddleware:', authMiddleware);
+
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, '../frontend/html'))); // Исправленный путь: из backend/ в frontend/html/
+app.use(express.static(path.join(__dirname, '../frontend/html')));
 
-// Mount registration and login routes first (no authentication needed for these)
-app.use('/api', registerRoute);
-app.use('/api', loginRoute);
+// Pass the client to routes
+app.use('/api', registerRoute(client));
+app.use('/api', loginRoute(client));
 
 // Protect market and user routes with authentication
 app.use('/api/market', authMiddleware, async (req, res) => {
@@ -32,8 +52,14 @@ app.use('/api/market', authMiddleware, async (req, res) => {
   }
 });
 
-app.use('/api', authMiddleware, userRoute);
+app.use('/api', authMiddleware, cryptoRoutes(client));
+app.use('/api', authMiddleware, userRoute(client));
 
-app.listen(5000, () => {
-  console.log('Server is running on http://localhost:5000');
+// Catch-all for 404 errors
+app.use((req, res) => {
+  res.status(404).json({ message: 'Endpoint not found' });
+});
+
+app.listen(process.env.PORT || 5000, () => {
+  console.log(`Server is running on http://localhost:${process.env.PORT || 5000}`);
 });

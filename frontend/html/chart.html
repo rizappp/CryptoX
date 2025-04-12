@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/navstyle.css">
+  <link rel="stylesheet" href="/css/chart.css">
+  <title>График | CryptoX</title>
+</head>
+<body>
+  <div class="main">
+    <div class="header">
+      <div class="logo">
+        <a href="/index.html" class="CryptoX">CryptoX</a>
+      </div>
+      <nav class="nav">
+        <a href="/market.html" class="nav-item">Биржа</a>
+        <a href="/savedpairs.html" class="nav-item">Сохраненные пары</a>
+        <a href="/chart.html" class="nav-item">График</a>
+        <div class="profile-dropdown">
+          <span class="nav-item dropdown-toggle">Профиль</span>
+          <div class="dropdown-menu">
+            <a href="/profile.html" class="dropdown-item">Перейти в профиль</a>
+            <button id="logoutDropdown" class="dropdown-item logout-dropdown">Выйти из аккаунта</button>
+          </div>
+        </div>
+      </nav>
+    </div>
+
+    <div class="chart-content">
+      <div class="chart-controls">
+        <!-- Pair Selection -->
+        <div class="pair-selector">
+          <label for="pairSelect">Выберите пару:</label>
+          <select id="pairSelect">
+            <option value="BTC/USD">BTC/USD</option>
+            <option value="ETH/USD">ETH/USD</option>
+            <!-- More pairs will be populated dynamically -->
+          </select>
+        </div>
+
+        <!-- Timeframe Selection -->
+        <div class="timeframe-selector">
+          <label>Таймфрейм:</label>
+          <button class="timeframe-btn" data-timeframe="1m">1м</button>
+          <button class="timeframe-btn" data-timeframe="5m">5м</button>
+          <button class="timeframe-btn" data-timeframe="15m">15м</button>
+          <button class="timeframe-btn" data-timeframe="1h">1ч</button>
+          <button class="timeframe-btn" data-timeframe="1d">1д</button>
+        </div>
+
+        <!-- Indicators and Tools -->
+        <div class="tools-selector">
+          <label>Индикаторы:</label>
+          <select id="indicatorSelect">
+            <option value="">Выберите индикатор</option>
+            <option value="ma">Скользящая средняя (MA)</option>
+            <option value="rsi">RSI</option>
+            <option value="macd">MACD</option>
+          </select>
+          <button id="addIndicatorBtn">Добавить</button>
+        </div>
+
+        <div class="drawing-tools">
+          <label>Инструменты:</label>
+          <button class="tool-btn" data-tool="line">Линия</button>
+          <button class="tool-btn" data-tool="fibonacci">Фибоначчи</button>
+          <button class="tool-btn" data-tool="reset">Сбросить</button>
+        </div>
+      </div>
+
+      <!-- Chart Container -->
+      <div id="chartContainer" style="width: 100%; height: 700px;"></div>
+
+      <!-- Indicators Display (e.g., RSI below the chart) -->
+      <div id="indicatorsContainer" style="width: 100%; height: 200px; display: none;"></div>
+    </div>
+
+    <footer class="footer">
+      <p>© 2025 CryptoX. Все права защищены.</p>
+    </footer>
+  </div>
+
+  <!-- Include TradingView Lightweight Charts -->
+  <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+  <script src="/js/commonscript.js"></script>
+  <script src="/js/chartscript.js"></script>
+</body>
+</html>

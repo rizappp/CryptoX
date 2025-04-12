@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const editButton = document.getElementById("editButton");
   const saveButton = document.getElementById("saveButton");
   const deleteButton = document.getElementById("deleteButton");
-  const logoutButton = document.getElementById("logoutButton");
+  const logoutButton = document.getElementById("logoutDropdown"); // Updated to match profile.html
 
   // Функция выхода из аккаунта
   const handleLogout = () => {
@@ -68,7 +68,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         saveButton.style.display = "none";
       } catch (error) {
         console.error("Ошибка сохранения:", error);
-        alert("Ошибка при сохранении данных");
+        alert("Заполните все поля");
       }
     });
 
@@ -82,7 +82,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
           if (!response.ok) throw new Error("Не удалось удалить аккаунт");
           alert("Аккаунт успешно удален!");
-          handleLogout();
+          window.location.href = "/login.html"; // Redirect after delete
         } catch (error) {
           console.error("Ошибка удаления аккаунта:", error);
           alert("Ошибка при удалении аккаунта");
@@ -90,14 +90,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     });
 
-    logoutButton.addEventListener("click", handleLogout);
-  }
-
-  // Выход через dropdown на всех страницах
-  const logoutDropdown = document.getElementById("logoutDropdown");
-  if (logoutDropdown) {
-    logoutDropdown.addEventListener("click", handleLogout);
-  } else {
-    console.warn("Элемент logoutDropdown не найден на странице");
+    // Attach logout event listener
+    if (logoutButton) {
+      logoutButton.addEventListener("click", handleLogout);
+    } else {
+      console.warn("Logout button not found. Ensure the element with id='logoutDropdown' exists.");
+    }
   }
 });

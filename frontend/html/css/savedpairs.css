@@ -1,0 +1,100 @@
+/* savedpairs.css */
+
+/* Reset and base styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .CryptoX {
+    text-decoration: none;
+    color: white;
+  }
+  
+  /* Saved Pairs Content */
+  .saved-pairs-content {
+    max-width: 1200px;
+    margin: 50px auto;
+    padding: 0 20px;
+  }
+  
+  .saved-pairs-content h1 {
+    color: #ffffff;
+    font-size: 2rem;
+    margin-bottom: 20px;
+  }
+  
+  /* Pairs Table */
+  .pairs-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #2d3a5f;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  .pairs-table th,
+  .pairs-table td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #3d4a6f;
+  }
+  
+  .pairs-table th {
+    background-color: #1a1f3a;
+    font-weight: 800;
+  }
+  
+  .pairs-table tr:nth-child(even) {
+    background-color: #3d4a6f;
+  }
+  
+  .pairs-table tr:hover {
+    background-color: #4a5eb5;
+    transition: background-color 0.3s ease;
+  }
+  
+  /* Remove Button */
+  .remove-button {
+    padding: 5px 10px;
+    background-color: #f44336;
+    border: none;
+    border-radius: 4px;
+    color: #ffffff;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .remove-button:hover {
+    background-color: #ff5555;
+  }
+  
+  /* Adjust table cell for action column */
+  .pairs-table td:last-child {
+    text-align: center;
+  }
+  
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding: 20px;
+    background-color: #1a1f3a;
+    border-top: 1px solid #2d3a5f;
+    color: #a0b0ff;
+    font-size: 0.9rem;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .saved-pairs-content h1 {
+      font-size: 1.5rem;
+    }
+  
+    .pairs-table th,
+    .pairs-table td {
+      padding: 10px;
+    }
+  }

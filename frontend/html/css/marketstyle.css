@@ -127,6 +127,39 @@
   font-size: 0.9rem;
 }
 
+.CryptoX {
+  text-decoration: none;
+  color: white;
+}
+
+/* Add to marketstyle.css */
+
+/* Save Button */
+.save-button {
+  padding: 5px 10px;
+  background-color: #4a5eb5;
+  border: none;
+  border-radius: 4px;
+  color: #ffffff;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.save-button:hover {
+  background-color: #5a6ec5;
+}
+
+.save-button:disabled {
+  background-color: #2d3a5f;
+  cursor: not-allowed;
+}
+
+/* Adjust table cell for action column */
+.crypto-table td:last-child {
+  text-align: center;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .search-filter {

@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/navstyle.css">
-  <link rel="stylesheet" href="/css/marketstyle.css">
-  <title>Биржа | CryptoX</title>
+  <link rel="stylesheet" href="/css/savedpairs.css">
+  <title>Сохраненные пары | CryptoX</title>
 </head>
 <body>
   <div class="main">
@@ -17,7 +17,7 @@
       <nav class="nav">
         <a href="/market.html" class="nav-item">Биржа</a>
         <a href="/savedpairs.html" class="nav-item">Сохраненные пары</a>
-        <a href="/chart.html" class="nav-item">График</a>
+        <a href="#" class="nav-item">График</a>
         <div class="profile-dropdown">
           <span class="nav-item dropdown-toggle">Профиль</span>
           <div class="dropdown-menu">
@@ -28,35 +28,22 @@
       </nav>
     </div>
 
-    <div class="market-content">
-      <div class="search-filter">
-        <input type="text" id="searchInput" placeholder="Поиск валюты..." class="search-input">
-        <select id="sortFilter" class="sort-filter">
-          <option value="price-desc">Дороже</option>
-          <option value="price-asc">Дешевле</option>
-        </select>
-      </div>
-
-      <table class="crypto-table">
+    <div class="saved-pairs-content">
+      <h1>Сохраненные пары</h1>
+      <table class="pairs-table">
         <thead>
           <tr>
             <th>Пара</th>
-            <th>Цена</th>
-            <th>Изменение (24 ч)</th>
-            <th>Объем</th>
+            <th>Цена (USD)</th>
+            <th>Изменение цены (24ч)</th>
+            <th>Объем (24ч)</th>
             <th>Действие</th>
           </tr>
         </thead>
-        <tbody id="cryptoList">
+        <tbody id="pairsList">
           <!-- Данные будут добавлены через JS -->
         </tbody>
       </table>
-
-      <div class="pagination" id="pagination">
-        <button id="prevPage" class="pagination-button">Предыдущая</button>
-        <span id="pageNumbers"></span>
-        <button id="nextPage" class="pagination-button">Следующая</button>
-      </div>
     </div>
 
     <footer class="footer">
@@ -65,6 +52,6 @@
   </div>
 
   
-  <script src="/js/marketscript.js"></script>
+  <script src="/js/savedpairs.js"></script>
 </body>
 </html>
