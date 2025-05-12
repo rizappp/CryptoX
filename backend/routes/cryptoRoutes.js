@@ -183,64 +183,116 @@ module.exports = (client) => {
     }
 
     try {
-      // Map pair to CoinGecko coin ID
-      const [base] = pair.split('/');
-      console.log('Extracted base:', base);
-      const coinMap = {
-        'BTC': 'bitcoin',
-        'ETH': 'ethereum',
-        'WBTC': 'wrapped-bitcoin',
-        'WSTETH': 'wrapped-steth'
+      // Map pair to Binance symbol
+      const [base, quote] = pair.split('/');
+      console.log('Extracted base and quote:', base, quote);
+      const binanceSymbolMap = {
+        'BTC/USD': 'BTCUSDT',
+        'ETH/USD': 'ETHUSDT',
+        'WBTC/USD': 'WBTCUSDT',
+        'WSTETH/USD': 'WSTETHUSDT',
+        'AVAX/USD': 'AVAXUSDT',
+        'LINK/USD': 'LINKUSDT',
+        'TON/USD': 'TONUSDT'
       };
-      const coinId = coinMap[base.toUpperCase()];
-      if (!coinId) {
-        console.log('Unsupported pair:', pair);
+      const symbol = binanceSymbolMap[pair];
+      if (!symbol) {
+        console.log('Unsupported pair for Binance:', pair);
         return res.status(400).json({ message: `Unsupported pair: ${pair}` });
       }
 
-      // Map timeframe to CoinGecko interval
+      // Map timeframe to Binance interval
       const timeframeMap = {
-        '1m': '',
-        '5m': '',
-        '15m': '',
-        '1h': '',
-        '1d': 'daily'
+        '1m': '1m',
+        '5m': '5m',
+        '15m': '15m',
+        '1h': '1h',
+        '1d': '1d'
       };
       const interval = timeframeMap[timeframe];
 
-      // Calculate range
-      const days = timeframe === '1d' ? 90 : 7;
-      console.log('Fetching CoinGecko data:', { coinId, days, interval });
-      const url = `https://api.coingecko.com/api/v3/coins/${coinId}/market_chart?vs_currency=usd&days=${days}${interval ? `&interval=${interval}` : ''}`;
-      console.log('CoinGecko URL:', url);
-      const response = await fetch(url);
+      // Map timeframe to duration in minutes
+      const intervalDurationMap = {
+        '1m': 1,
+        '5m': 5,
+        '15m': 15,
+        '1h': 60,
+        '1d': 1440
+      };
+      const intervalDuration = intervalDurationMap[timeframe];
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.log('CoinGecko fetch failed:', { status: response.status, errorText });
-        throw new Error(`Failed to fetch chart data from CoinGecko: ${response.status} ${errorText}`);
+      // Calculate limit based on timeframe (more candles for 1m than 5m)
+      const limitMap = {
+        '1m': 4320,  // 3 days (4320 minutes)
+        '5m': 2880,  // 10 days (2880 * 5 minutes = 14400 minutes)
+        '15m': 960,  // 10 days (960 * 15 minutes = 14400 minutes)
+        '1h': 720,   // 30 days (720 hours)
+        '1d': 180    // 180 days
+      };
+      const desiredLimit = limitMap[timeframe];
+
+      // Binance API limit per request is 1000 candles
+      const maxLimitPerRequest = 1000;
+      let allData = [];
+      let remainingCandles = desiredLimit;
+      let endTime = Date.now();
+
+      while (remainingCandles > 0) {
+        const candlesToFetch = Math.min(remainingCandles, maxLimitPerRequest);
+        const startTime = endTime - (candlesToFetch * intervalDuration * 60 * 1000);
+
+        console.log('Fetching Binance data:', { symbol, interval, startTime, endTime, candlesToFetch });
+        const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&startTime=${Math.floor(startTime)}&endTime=${Math.floor(endTime)}&limit=${candlesToFetch}`;
+        console.log('Binance URL:', url);
+        const response = await fetch(url);
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.log('Binance fetch failed:', { status: response.status, errorText });
+          throw new Error(`Failed to fetch chart data from Binance: ${response.status} ${errorText}`);
+        }
+
+        const data = await response.json();
+        console.log(`Fetched ${data.length} candles, remaining: ${remainingCandles}`);
+
+        // Validate data
+        if (!Array.isArray(data) || data.length === 0) {
+          console.log('No more data available');
+          break;
+        }
+
+        allData = [...data, ...allData]; // Prepend data to maintain chronological order
+        remainingCandles -= data.length;
+        endTime = data[0][0] - 1; // Set endTime to the timestamp of the earliest candle minus 1ms
       }
 
-      const data = await response.json();
-      console.log('CoinGecko response keys:', Object.keys(data));
+      console.log(`Total candles fetched: ${allData.length}`);
+      console.log('Raw Binance response (first 5):', allData.slice(0, 5));
+      console.log('Raw Binance response (last 5):', allData.slice(-5));
 
-      // Check if prices exist
-      if (!data.prices || !Array.isArray(data.prices)) {
-        console.log('Invalid CoinGecko response:', data);
-        throw new Error('Invalid data format from CoinGecko: prices array missing');
+      // Validate data
+      if (allData.length === 0) {
+        throw new Error('No data received from Binance');
       }
 
-      // Format data for Lightweight Charts (pseudo-OHLC)
-      const chartData = data.prices.map(([timestamp, price]) => ({
-        time: Math.floor(timestamp / 1000), // Convert ms to seconds
-        open: price,
-        high: price, // No high/low from market_chart, use price
-        low: price,
-        close: price,
-        volume: data.total_volumes ? data.total_volumes[0][1] : 0 // Use first volume or 0
-      }));
+      // Format data for Lightweight Charts with validation
+      const chartData = allData.map(item => {
+        const [timestamp, open, high, low, close, volume] = item;
+        if (high === low) {
+          console.warn('High and low are equal for timestamp:', timestamp);
+        }
+        return {
+          time: Math.floor(parseInt(timestamp) / 1000),
+          open: parseFloat(open),
+          high: parseFloat(high),
+          low: parseFloat(low),
+          close: parseFloat(close),
+          volume: parseFloat(volume)
+        };
+      });
 
       console.log('Formatted chart data (first 5):', chartData.slice(0, 5));
+      console.log('Formatted chart data (last 5):', chartData.slice(-5));
       res.json(chartData);
     } catch (error) {
       console.error('Error fetching chart data:', error.message, error.stack);

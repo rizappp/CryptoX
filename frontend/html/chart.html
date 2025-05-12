@@ -48,23 +48,22 @@
           <button class="timeframe-btn" data-timeframe="1d">1д</button>
         </div>
 
-        <!-- Indicators and Tools -->
+        <!-- Indicators -->
         <div class="tools-selector">
           <label>Индикаторы:</label>
           <select id="indicatorSelect">
             <option value="">Выберите индикатор</option>
             <option value="ma">Скользящая средняя (MA)</option>
-            <option value="rsi">RSI</option>
-            <option value="macd">MACD</option>
+            <option value="ema">Скользящая экспоненциальная средняя (EMA)</option>
+            <option value="psar">Параболический SAR (PSAR)</option>
           </select>
           <button id="addIndicatorBtn">Добавить</button>
         </div>
 
-        <div class="drawing-tools">
-          <label>Инструменты:</label>
-          <button class="tool-btn" data-tool="line">Линия</button>
-          <button class="tool-btn" data-tool="fibonacci">Фибоначчи</button>
-          <button class="tool-btn" data-tool="reset">Сбросить</button>
+        <!-- Recommendations -->
+        <div class="recommendation">
+          <label>Рекомендация:</label>
+          <span id="recommendationText">Нейтрально</span>
         </div>
       </div>
 

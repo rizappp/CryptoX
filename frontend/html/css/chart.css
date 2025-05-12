@@ -12,7 +12,7 @@
 }
 
 #chartContainer {
-  width: 100%;
+  width: 70%;
   flex-grow: 1; /* Убедитесь, что график растягивается */
   min-height: 400px; /* Можно уменьшить минимальную высоту */
   display: block;
@@ -23,6 +23,19 @@
   width: 100%;
   height: 200px;
   display: none;
+}
+
+.recommendation {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+}
+.recommendation label {
+  margin-right: 10px;
+  font-weight: bold;
+}
+.recommendation span {
+  font-size: 16px;
 }
 
 .chart-controls {
