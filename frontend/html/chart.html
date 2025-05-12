@@ -34,9 +34,7 @@
         <div class="pair-selector">
           <label for="pairSelect">Выберите пару:</label>
           <select id="pairSelect">
-            <option value="BTC/USD">BTC/USD</option>
-            <option value="ETH/USD">ETH/USD</option>
-            <!-- More pairs will be populated dynamically -->
+            <!-- Pairs will be populated dynamically -->
           </select>
         </div>
 
@@ -46,7 +44,7 @@
           <button class="timeframe-btn" data-timeframe="1m">1м</button>
           <button class="timeframe-btn" data-timeframe="5m">5м</button>
           <button class="timeframe-btn" data-timeframe="15m">15м</button>
-          <button class="timeframe-btn" data-timeframe="1h">1ч</button>
+          <button class="timeframe-btn active" data-timeframe="1h">1ч</button>
           <button class="timeframe-btn" data-timeframe="1d">1д</button>
         </div>
 
@@ -70,11 +68,9 @@
         </div>
       </div>
 
-      <!-- Chart Container -->
       <div id="chartContainer" style="width: 100%; height: 700px;"></div>
 
-      <!-- Indicators Display (e.g., RSI below the chart) -->
-      <div id="indicatorsContainer" style="width: 100%; height: 200px; display: none;"></div>
+      <div id="indicatorsContainer"></div>
     </div>
 
     <footer class="footer">
@@ -83,8 +79,7 @@
   </div>
 
   <!-- Include TradingView Lightweight Charts -->
-  <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
-  <script src="/js/commonscript.js"></script>
-  <script src="/js/chartscript.js"></script>
+  <script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
+  <script src="/js/chartscript.js" defer></script>
 </body>
 </html>

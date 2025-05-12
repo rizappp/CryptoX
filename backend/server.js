@@ -7,7 +7,8 @@ const registerRoute = require('./routes/registerRoute');
 const loginRoute = require('./routes/loginRoute');
 const userRoute = require('./routes/userRoutes');
 const cryptoRoutes = require('./routes/cryptoRoutes');
-const authMiddlewareFactory = require('./middleware/auth'); // Renamed for clarity
+const authMiddlewareFactory = require('./middleware/auth');
+const chartRouter = require('./routes/chartdata');
 
 // Load environment variables
 require('dotenv').config();
@@ -36,6 +37,7 @@ app.use(express.static(path.join(__dirname, '../frontend/html')));
 // Pass the client to routes
 app.use('/api', registerRoute(client));
 app.use('/api', loginRoute(client));
+app.use('/api', chartRouter);
 
 // Protect market and user routes with authentication
 app.use('/api/market', authMiddleware, async (req, res) => {
