@@ -39,7 +39,6 @@
           return;
         }
 
-        // Блокируем кнопку
         submitButton.disabled = true;
         submitButton.textContent = "Подождите...";
 
@@ -52,7 +51,7 @@
           const data = await response.json();
 
           if (response.ok) {
-            localStorage.setItem("emailToVerify", email); // Сохраняем email для проверки
+            localStorage.setItem("emailToVerify", email);
             errorMessage.textContent = "Код отправлен на вашу почту!";
             errorMessage.style.color = "green";
             errorMessage.style.display = "block";
@@ -72,7 +71,7 @@
           setTimeout(() => {
             submitButton.disabled = false;
             submitButton.textContent = "Зарегистрироваться";
-          }, 5000); // Разблокировка через 5 секунд
+          }, 7000);
         }
       });
     });

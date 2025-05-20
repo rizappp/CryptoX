@@ -28,11 +28,10 @@ document.addEventListener("DOMContentLoaded", () => {
         throw new Error("Ошибка при получении сохраненных пар");
       }
       const data = await response.json();
-      // Ensure savedPairs is an array of strings
       savedPairs = Array.isArray(data) ? data.map(item => item.pair || "").filter(Boolean) : [];
     } catch (error) {
       console.error("Ошибка загрузки сохраненных пар:", error);
-      savedPairs = []; // Fallback to empty array on error
+      savedPairs = [];
     }
   }
 
@@ -74,13 +73,17 @@ document.addEventListener("DOMContentLoaded", () => {
   async function savePair(pair) {
     try {
       const id = localStorage.getItem("id");
+      if (!id) {
+        throw new Error("User ID not found in localStorage");
+      }
+      console.log("Отправка пары:", { userId: id, pair });
       const response = await fetch("http://localhost:5000/api/save-pair", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "x-user-id": id
         },
-        body: JSON.stringify({ pair })
+        body: JSON.stringify({ userId: id, pair })
       });
 
       console.log("Response Status:", response.status);
@@ -110,7 +113,6 @@ document.addEventListener("DOMContentLoaded", () => {
   function displayCryptocurrencies(data) {
     cryptoList.innerHTML = "";
     data.forEach(crypto => {
-      // Ensure savedPairs is an array before calling includes
       const isSaved = Array.isArray(savedPairs) && savedPairs.includes(crypto.name);
       const row = document.createElement("tr");
       row.innerHTML = `

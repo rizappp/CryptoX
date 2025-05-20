@@ -4,21 +4,18 @@ document.addEventListener("DOMContentLoaded", async () => {
   const editButton = document.getElementById("editButton");
   const saveButton = document.getElementById("saveButton");
   const deleteButton = document.getElementById("deleteButton");
-  const logoutButton = document.getElementById("logoutDropdown"); // Updated to match profile.html
+  const logoutButton = document.getElementById("logoutDropdown"); 
 
-  // Функция выхода из аккаунта
   const handleLogout = () => {
     localStorage.removeItem("id");
     window.location.href = "/login.html";
   };
 
-  // Проверка авторизации только для profile.html
   if (profileForm && !id) {
     window.location.href = "/login.html";
     return;
   }
 
-  // Логика для страницы профиля
   if (profileForm && id) {
     try {
       const response = await fetch(`http://localhost:5000/api/user/${id}`, {
@@ -82,7 +79,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
           if (!response.ok) throw new Error("Не удалось удалить аккаунт");
           alert("Аккаунт успешно удален!");
-          window.location.href = "/login.html"; // Redirect after delete
+          window.location.href = "/login.html";
         } catch (error) {
           console.error("Ошибка удаления аккаунта:", error);
           alert("Ошибка при удалении аккаунта");
@@ -90,7 +87,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     });
 
-    // Attach logout event listener
     if (logoutButton) {
       logoutButton.addEventListener("click", handleLogout);
     } else {

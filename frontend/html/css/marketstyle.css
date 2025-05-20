@@ -1,4 +1,3 @@
-/* Reset and base styles */
 * {
   margin: 0;
   padding: 0;
@@ -6,7 +5,6 @@
   font-family: 'Inter', sans-serif;
 }
 
-/* Market Content */
 .market-content {
   max-width: 1200px;
   margin: 50px auto;
@@ -48,7 +46,6 @@
   color: #ffffff;
 }
 
-/* Crypto Table */
 .crypto-table {
   width: 100%;
   border-collapse: collapse;
@@ -78,7 +75,6 @@
   transition: background-color 0.3s ease;
 }
 
-/* Price Change Styling */
 .price-change.positive {
   color: #4caf50;
 }
@@ -87,7 +83,6 @@
   color: #f44336;
 }
 
-/* Pagination Styles */
 .pagination {
   display: flex;
   justify-content: center;
@@ -117,7 +112,6 @@
   cursor: not-allowed;
 }
 
-/* Footer */
 .footer {
   text-align: center;
   padding: 20px;
@@ -132,9 +126,6 @@
   color: white;
 }
 
-/* Add to marketstyle.css */
-
-/* Save Button */
 .save-button {
   padding: 5px 10px;
   background-color: #4a5eb5;
@@ -155,12 +146,10 @@
   cursor: not-allowed;
 }
 
-/* Adjust table cell for action column */
 .crypto-table td:last-child {
   text-align: center;
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
   .search-filter {
       flex-direction: column;

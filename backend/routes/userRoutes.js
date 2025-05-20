@@ -6,7 +6,6 @@ module.exports = (client) => {
     const { id } = req.params;
 
     try {
-      // Validate that id is a number
       const userId = parseInt(id, 10);
       if (isNaN(userId)) {
         return res.status(400).json({ message: 'Неверный формат идентификатора пользователя: ожидается число' });
@@ -31,7 +30,6 @@ module.exports = (client) => {
     const { username, name, surname, email } = req.body;
 
     try {
-      // Validate that id is a number
       const userId = parseInt(id, 10);
       if (isNaN(userId)) {
         return res.status(400).json({ message: 'Неверный формат идентификатора пользователя: ожидается число' });
@@ -60,7 +58,6 @@ module.exports = (client) => {
     const id = req.headers['x-user-id'];
 
     try {
-      // Validate that id is a number
       const userId = parseInt(id, 10);
       if (isNaN(userId)) {
         return res.status(400).json({ message: 'Неверный формат идентификатора пользователя: ожидается число в заголовке x-user-id' });

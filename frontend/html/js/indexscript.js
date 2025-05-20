@@ -1,16 +1,14 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // Check if user is authenticated
   if (!localStorage.getItem("id")) {
-    window.location.href = "login.html"; // Redirect to login if no id
+    window.location.href = "login.html"; 
   }
 
-  // Logout functionality
-  const logoutButton = document.getElementById("logoutDropdown"); // Updated to match index.html
+  const logoutButton = document.getElementById("logoutDropdown");
 
   if (logoutButton) {
     logoutButton.addEventListener("click", () => {
-      localStorage.removeItem("id"); // Clear id
-      window.location.href = "login.html"; // Redirect to login page
+      localStorage.removeItem("id"); 
+      window.location.href = "login.html";
     });
   } else {
     console.warn("Logout button not found. Ensure the element with id='logoutDropdown' exists.");

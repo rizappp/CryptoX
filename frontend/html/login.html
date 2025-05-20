@@ -8,7 +8,6 @@
 </head>
 <body>
   <div class="logo">CryptoX</div>
-  <div class="back"><a href="index.html">Назад</a></div>
   <div class="login">
       <h1>Вход</h1>
       <form id="login-form">
@@ -44,11 +43,11 @@
   });
 
   const data = await response.json();
-  console.log("Login response data:", data); // Debug log
+  console.log("Login response data:", data);
 
   if (response.ok) {
-    localStorage.setItem("id", data.id); // Store id
-    window.location.href = "index.html"; // Redirect to homepage
+    localStorage.setItem("id", data.id); 
+    window.location.href = "index.html";
   } else {
     errorMessage.textContent = data.message;
     errorMessage.style.display = "block";
@@ -60,6 +59,4 @@
 }
     });
   </script>
-
-  <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'91a88f427e46b0ed',t:'MTc0MDk5ODg4Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>

@@ -1,6 +1,5 @@
 console.log("Chart script loaded");
 
-// Проверка на наличие библиотеки
 if (!window.LightweightCharts) {
   console.error("Lightweight Charts is not loaded!");
 } else {
@@ -19,6 +18,7 @@ const userId = localStorage.getItem("userId");
 
 if (!userId) {
   console.error("Error: User is not authorized. Missing userId.");
+  chartContainer.innerHTML = `<p style="text-align: center; color: #a0b0ff;">Ошибка: Пожалуйста, войдите в аккаунт.</p>`;
 }
 
 let chart;
@@ -30,48 +30,63 @@ let currentTimeframe = "1h";
 let candleData = [];
 let smaData = [];
 let emaData = [];
+let savedPairs = [];
+let ws = null;
 
-// Получение сохранённых пар
+const validTimeframes = ["1m", "5m", "15m", "1h", "1d"];
+function isValidTimeframe(timeframe) {
+  return validTimeframes.includes(timeframe);
+}
+
 fetch("/api/saved-pairs", {
   headers: {
     "x-user-id": userId,
   },
 })
-  .then(res => res.json())
+  .then(res => {
+    if (!res.ok) throw new Error(`Failed to fetch saved pairs: ${res.status}`);
+    return res.json();
+  })
   .then(pairs => {
     console.log("Saved pairs:", pairs);
+    savedPairs = pairs.map(p => ({ pair: p.pair.toUpperCase(), coinData: p.coinData }));
     pairSelect.innerHTML = "";
 
-    pairs.forEach(pairObj => {
+    savedPairs.forEach(pairObj => {
       const option = document.createElement("option");
       option.value = pairObj.pair;
       option.textContent = pairObj.pair;
       pairSelect.appendChild(option);
     });
 
-    if (pairs.length > 0) {
-      pairSelect.value = pairs[0].pair;
+    if (savedPairs.length > 0) {
+      pairSelect.value = savedPairs.find(p => p.pair === "BTC/USD")?.pair || savedPairs[0].pair;
       loadChart();
+    } else {
+      chartContainer.innerHTML = `<p style="text-align: center; color: #a0b0ff;">Нет сохранённых пар.</p>`;
     }
   })
   .catch(err => {
     console.error("Error fetching saved pairs:", err);
+    chartContainer.innerHTML = `<p style="text-align: center; color: #a0b0ff;">Ошибка загрузки пар: ${err.message}</p>`;
   });
 
-// Отслеживаем изменения таймфрейма
 timeframeButtons.forEach(button => {
   button.addEventListener("click", () => {
+    const timeframe = button.dataset.timeframe;
+    if (!isValidTimeframe(timeframe)) {
+      console.error(`Invalid timeframe: ${timeframe}`);
+      return;
+    }
     timeframeButtons.forEach(btn => btn.classList.remove("active"));
     button.classList.add("active");
-    currentTimeframe = button.dataset.timeframe;
+    currentTimeframe = timeframe;
     loadChart();
   });
 });
 
-// Отслеживаем изменение выбранной пары
 pairSelect.addEventListener("change", loadChart);
 
-// Обновляем текст кнопки индикатора
 function updateButtonText() {
   const indicator = indicatorSelect.value;
   if (!indicator) {
@@ -96,7 +111,6 @@ function updateButtonText() {
   }
 }
 
-// Вычисление рекомендации
 function calculateRecommendation() {
   if (!smaSeries || !emaSeries || !smaData.length || !emaData.length) {
     recommendationText.textContent = "Нейтрально";
@@ -111,11 +125,10 @@ function calculateRecommendation() {
 
   if (!lastSMA || !prevSMA || !lastEMA || !prevEMA) {
     recommendationText.textContent = "Нейтрально";
-    recommendationText.style.color = "#000000";
+    recommendationText.style.color = "#FFFFFF";
     return;
   }
 
-  // Проверяем пересечение EMA и SMA
   if (prevEMA <= prevSMA && lastEMA > lastSMA) {
     recommendationText.textContent = "Покупка";
     recommendationText.style.color = "#4caf50";
@@ -124,14 +137,12 @@ function calculateRecommendation() {
     recommendationText.style.color = "#f44336";
   } else {
     recommendationText.textContent = "Нейтрально";
-    recommendationText.style.color = "#000000";
+    recommendationText.style.color = "#FFFFFF";
   }
 }
 
-// Обработчик выбора индикатора
 indicatorSelect.addEventListener("change", updateButtonText);
 
-// Обработчик добавления/удаления индикатора
 addIndicatorBtn.addEventListener("click", () => {
   const indicator = indicatorSelect.value;
   if (!indicator) {
@@ -179,18 +190,115 @@ addIndicatorBtn.addEventListener("click", () => {
   calculateRecommendation();
 });
 
-// Основная функция загрузки графика
+function initWebSocket(pair, timeframe) {
+  if (ws) {
+    console.log('Closing existing WebSocket');
+    ws.close();
+    ws = null;
+  }
+
+  function connect() {
+    console.log('Initiating WebSocket connection for:', pair, timeframe);
+    ws = new WebSocket(`ws://localhost:5000`);
+
+    ws.onopen = () => {
+      if (!ws) {
+        console.error('WebSocket is null in onopen');
+        return;
+      }
+      console.log('WebSocket connected');
+      try {
+        ws.send(JSON.stringify({ userId, pair, timeframe }));
+        console.log('Sent subscription:', { userId, pair, timeframe });
+      } catch (error) {
+        console.error('Error sending subscription:', error);
+      }
+    };
+
+    ws.onmessage = (event) => {
+      console.log('Raw WebSocket message:', event.data);
+      try {
+        const data = JSON.parse(event.data);
+        if (data.error) {
+          console.error('WebSocket error from server:', data.error);
+          return;
+        }
+        if (data.type === 'kline') {
+          const candle = data.candle;
+          console.log('Received kline:', candle);
+
+          const candleDataIndex = candleData.findIndex(c => c.time === candle.time);
+          const newCandle = {
+            time: candle.time,
+            open: candle.open,
+            high: candle.high,
+            low: candle.low,
+            close: candle.close
+          };
+
+          if (candleDataIndex >= 0) {
+            candleData[candleDataIndex] = newCandle;
+          } else {
+            candleData.push(newCandle);
+          }
+
+          candleSeries.update(newCandle);
+          console.log('Updated chart with candle:', newCandle);
+
+          if (smaSeries) addSMAIndicator();
+          if (emaSeries) addEMAIndicator();
+          if (psarSeries) addPSARIndicator();
+
+          calculateRecommendation();
+
+          const lastIndex = candleData.length - 1;
+          chart.timeScale().setVisibleLogicalRange({
+            from: lastIndex - 60,
+            to: lastIndex + 10
+          });
+        }
+      } catch (error) {
+        console.error('WebSocket message error:', error);
+      }
+    };
+
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+
+    ws.onclose = () => {
+      console.log('WebSocket closed, reconnecting in 5s...');
+      ws = null;
+      setTimeout(connect, 5000);
+    };
+  }
+
+  connect();
+}
+
 function loadChart() {
-  const selectedPair = pairSelect.value;
+  let selectedPair = pairSelect.value;
   if (!selectedPair) {
     console.error("No pair selected.");
+    chartContainer.innerHTML = `<p style="text-align: center; color: #a0b0ff;">Ошибка: Выберите торговую пару.</p>`;
     return;
   }
 
   if (!userId) {
     console.error("Error: User is not authorized. Missing userId.");
+    chartContainer.innerHTML = `<p style="text-align: center; color: #a0b0ff;">Ошибка: Пожалуйста, войдите в аккаунт.</p>`;
     return;
   }
+
+  if (!isValidTimeframe(currentTimeframe)) {
+    console.error(`Invalid timeframe: ${currentTimeframe}`);
+    chartContainer.innerHTML = `<p style="text-align: center; color: #a0b0ff;">Ошибка: Неверный таймфрейм.</p>`;
+    return;
+  }
+
+  selectedPair = selectedPair.replace('-', '/').toUpperCase();
+
+  console.log("Loading chart with:", { userId, pair: selectedPair, timeframe: currentTimeframe });
 
   const chartDimensions = chartContainer.getBoundingClientRect();
   console.log("Chart container dimensions before init:", {
@@ -266,16 +374,22 @@ function loadChart() {
     }
   });
 
-  fetch(
-    `/api/chart-data?pair=${encodeURIComponent(selectedPair)}&timeframe=${currentTimeframe}`,
-    {
-      headers: {
-        "x-user-id": userId,
-      },
-    }
-  )
+  const url = `/api/chart-data?pair=${encodeURIComponent(selectedPair)}&timeframe=${currentTimeframe}`;
+  console.log("Fetching chart data from:", url);
+
+  fetch(url, {
+    headers: {
+      "x-user-id": userId,
+      "Content-Type": "application/json"
+    },
+  })
     .then(res => {
-      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      console.log('Chart data response:', res.status);
+      if (!res.ok) {
+        return res.json().then(error => {
+          throw new Error(`HTTP error! status: ${res.status}, message: ${error.message || "Unknown error"}`);
+        });
+      }
       return res.json();
     })
     .then(data => {
@@ -332,14 +446,38 @@ function loadChart() {
 
       updateButtonText();
       calculateRecommendation();
+
+      console.log('Initiating stream for:', selectedPair, currentTimeframe);
+      fetch(`/api/chart-data-stream?pair=${encodeURIComponent(selectedPair)}&timeframe=${currentTimeframe}`, {
+        headers: {
+          "x-user-id": userId,
+          "Content-Type": "application/json"
+        },
+      })
+        .then(res => {
+          console.log('Stream response:', res.status);
+          if (!res.ok) {
+            return res.json().then(error => {
+              throw new Error(`Stream error: ${error.message}`);
+            });
+          }
+          return res.json();
+        })
+        .then(data => {
+          console.log('Stream initiated:', data);
+          initWebSocket(selectedPair, currentTimeframe);
+        })
+        .catch(err => {
+          console.error("Error initiating stream:", err);
+          chartContainer.innerHTML += `<p style="text-align: center; color: #a0b0ff;">Не удалось запустить поток данных: ${err.message}</p>`;
+        });
     })
     .catch(err => {
       console.error("Error fetching chart data:", err);
-      chartContainer.innerHTML = `<p style="text-align: center; color: #a0b0ff;">Ошибка: ${err.message}</p>`;
+      chartContainer.innerHTML = `<p style="text-align: center; color: #a0b0ff;">Ошибка загрузки данных для пары ${selectedPair}: ${err.message}. Попробуйте другую пару или войдите снова.</p>`;
     });
 }
 
-// Функция добавления SMA
 function addSMAIndicator() {
   const period = 20;
   smaData = [];
@@ -367,7 +505,6 @@ function addSMAIndicator() {
   calculateRecommendation();
 }
 
-// Функция добавления EMA
 function addEMAIndicator() {
   const period = 9;
   emaData = [];
@@ -398,59 +535,56 @@ function addEMAIndicator() {
   calculateRecommendation();
 }
 
-// Функция добавления Parabolic SAR
 function addPSARIndicator() {
-  const step = 0.02;
-  const maxStep = 0.2;
   const psarData = [];
-  let psar = candleData[0].low;
-  let ep = candleData[0].high;
-  let af = step;
-  let isUptrend = true;
+  let trend = 1; 
+  let accelerationFactor = 0.02;
+  const maxAcceleration = 0.2;
+  let extremePoint = candleData[0].high;
+  let sar = candleData[0].low;
 
   for (let i = 1; i < candleData.length; i++) {
-    psarData.push({ time: candleData[i - 1].time, value: psar });
+    const prevCandle = candleData[i - 1];
+    const currCandle = candleData[i];
 
-    psar = psar + af * (ep - psar);
+    sar = sar + accelerationFactor * (extremePoint - sar);
 
-    if (isUptrend) {
-      psar = Math.min(psar, candleData[i - 1].low, i >= 2 ? candleData[i - 2].low : candleData[i - 1].low);
-      if (psar > candleData[i].low) {
-        isUptrend = false;
-        psar = ep;
-        ep = candleData[i].low;
-        af = step;
+    if (trend > 0) {
+      sar = Math.min(sar, prevCandle.low);
+      if (currCandle.low < sar) {
+        trend = -1;
+        sar = extremePoint;
+        accelerationFactor = 0.02;
+        extremePoint = currCandle.low;
       } else {
-        if (candleData[i].high > ep) {
-          ep = candleData[i].high;
-          af = Math.min(af + step, maxStep);
+        if (currCandle.high > extremePoint) {
+          extremePoint = currCandle.high;
+          accelerationFactor = Math.min(accelerationFactor + 0.02, maxAcceleration);
         }
       }
     } else {
-      psar = Math.max(psar, candleData[i - 1].high, i >= 2 ? candleData[i - 2].high : candleData[i - 1].high);
-      if (psar < candleData[i].high) {
-        isUptrend = true;
-        psar = ep;
-        ep = candleData[i].high;
-        af = step;
+      sar = Math.max(sar, prevCandle.high);
+      if (currCandle.high > sar) {
+        trend = 1;
+        sar = extremePoint;
+        accelerationFactor = 0.02;
+        extremePoint = currCandle.high;
       } else {
-        if (candleData[i].low < ep) {
-          ep = candleData[i].low;
-          af = Math.min(af + step, maxStep);
+        if (currCandle.low < extremePoint) {
+          extremePoint = currCandle.low;
+          accelerationFactor = Math.min(accelerationFactor + 0.02, maxAcceleration);
         }
       }
     }
+
+    psarData.push({ time: currCandle.time, value: sar });
   }
 
-  psarData.push({ time: candleData[candleData.length - 1].time, value: psar });
-
   psarSeries = chart.addLineSeries({
-    color: '#9C27B0',
-    lineWidth: 0,
-    crosshairMarkerVisible: true,
-    crosshairMarkerRadius: 3,
+    color: '#2196F3',
+    lineWidth: 1,
     lineStyle: LightweightCharts.LineStyle.Dotted,
-    title: 'PSAR (0.02, 0.2)',
+    title: 'Parabolic SAR',
     priceFormat: {
       type: 'price',
       precision: 2,
@@ -459,12 +593,3 @@ function addPSARIndicator() {
   });
   psarSeries.setData(psarData);
 }
-
-// Обработка ресайза окна
-window.addEventListener("resize", () => {
-  if (chart) {
-    chart.resize(chartContainer.clientWidth || 800, chartContainer.clientHeight || 700);
-    console.log("Chart resized to:", chartContainer.clientWidth || 800, chartContainer.clientHeight || 700);
-    chart.timeScale().fitContent();
-  }
-});

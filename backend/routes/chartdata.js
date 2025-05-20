@@ -14,8 +14,7 @@ router.get('/chartdata', (req, res) => {
     return res.status(400).json({ message: 'Пара или таймфрейм не указаны' });
   }
 
-  // Подставь сюда свою реальную логику
-  const chartData = [/* массив свечей */];
+  const chartData = [];
 
   res.json(chartData);
 });

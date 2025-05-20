@@ -30,15 +30,12 @@
 
     <div class="chart-content">
       <div class="chart-controls">
-        <!-- Pair Selection -->
         <div class="pair-selector">
           <label for="pairSelect">Выберите пару:</label>
           <select id="pairSelect">
-            <!-- Pairs will be populated dynamically -->
           </select>
         </div>
 
-        <!-- Timeframe Selection -->
         <div class="timeframe-selector">
           <label>Таймфрейм:</label>
           <button class="timeframe-btn" data-timeframe="1m">1м</button>
@@ -48,7 +45,6 @@
           <button class="timeframe-btn" data-timeframe="1d">1д</button>
         </div>
 
-        <!-- Indicators -->
         <div class="tools-selector">
           <label>Индикаторы:</label>
           <select id="indicatorSelect">
@@ -60,7 +56,6 @@
           <button id="addIndicatorBtn">Добавить</button>
         </div>
 
-        <!-- Recommendations -->
         <div class="recommendation">
           <label>Рекомендация:</label>
           <span id="recommendationText">Нейтрально</span>
@@ -77,7 +72,6 @@
     </footer>
   </div>
 
-  <!-- Include TradingView Lightweight Charts -->
   <script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
   <script src="/js/chartscript.js" defer></script>
 </body>

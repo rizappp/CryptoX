@@ -1,6 +1,3 @@
-/* savedpairs.css */
-
-/* Reset and base styles */
 * {
     margin: 0;
     padding: 0;
@@ -13,7 +10,6 @@
     color: white;
   }
   
-  /* Saved Pairs Content */
   .saved-pairs-content {
     max-width: 1200px;
     margin: 50px auto;
@@ -26,7 +22,6 @@
     margin-bottom: 20px;
   }
   
-  /* Pairs Table */
   .pairs-table {
     width: 100%;
     border-collapse: collapse;
@@ -56,7 +51,6 @@
     transition: background-color 0.3s ease;
   }
   
-  /* Remove Button */
   .remove-button {
     padding: 5px 10px;
     background-color: #f44336;
@@ -72,12 +66,10 @@
     background-color: #ff5555;
   }
   
-  /* Adjust table cell for action column */
   .pairs-table td:last-child {
     text-align: center;
   }
   
-  /* Footer */
   .footer {
     text-align: center;
     padding: 20px;
@@ -87,7 +79,6 @@
     font-size: 0.9rem;
   }
   
-  /* Responsive Design */
   @media (max-width: 768px) {
     .saved-pairs-content h1 {
       font-size: 1.5rem;

@@ -1,180 +1,105 @@
 const express = require('express');
-const bcrypt = require('bcryptjs');
 const router = express.Router();
+const WebSocket = require('ws');
 
-module.exports = (client) => {
-  // Middleware to verify user
-  const authMiddleware = async (req, res, next) => {
+module.exports = (client, wss) => {
+  router.post('/save-pair', async (req, res) => {
     const userId = req.headers['x-user-id'];
-    if (!userId) {
-      return res.status(401).json({ message: 'Unauthorized: No user ID provided' });
-    }
-    try {
-      const userResult = await client.query('SELECT * FROM users WHERE id = $1', [userId]);
-      if (userResult.rows.length === 0) {
-        return res.status(401).json({ message: 'Unauthorized: User not found' });
-      }
-      req.user = userResult.rows[0];
-      next();
-    } catch (error) {
-      console.error('Auth middleware error:', error);
-      res.status(500).json({ message: 'Server error' });
-    }
-  };
-
-  // Register route
-  router.post('/register', async (req, res) => {
-    const { username, password, name, surname, email } = req.body;
-    if (password.length < 4) {
-      return res.status(400).json({ message: 'Новый пароль должен содержать минимум 4 символа' });
-    }
-    if (!username || !password || !email) {
-      return res.status(400).json({ message: 'Username, email, and password are required' });
-    }
-
-    try {
-      const userExists = await client.query('SELECT * FROM users WHERE username = $1 OR email = $2', [username, email]);
-      if (userExists.rows.length > 0) {
-        return res.status(400).json({ message: 'User with this username or email already exists' });
-      }
-
-      const hashedPassword = await bcrypt.hash(password, 10);
-      const result = await client.query(
-        'INSERT INTO users (username, password_hash, name, surname, email, created_at) VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING id',
-        [username, hashedPassword, name || '', surname || '', email]
-      );
-
-      res.status(201).json({ message: 'User registered successfully', userId: result.rows[0].id });
-    } catch (error) {
-      console.error('Register error:', error);
-      res.status(500).json({ message: 'Server error' });
-    }
-  });
-
-  // Login route
-  router.post('/login', async (req, res) => {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ message: 'Email and password are required' });
-    }
-
-    try {
-      const userResult = await client.query('SELECT * FROM users WHERE email = $1', [email]);
-
-      if (userResult.rows.length === 0) {
-        return res.status(401).json({ message: 'Invalid credentials' });
-      }
-
-      const user = userResult.rows[0];
-      const isMatch = await bcrypt.compare(password, user.password_hash);
-
-      if (!isMatch) {
-        return res.status(401).json({ message: 'Invalid credentials' });
-      }
-
-      res.json({ message: 'Login successful', userId: user.id });
-    } catch (error) {
-      console.error('Login error:', error);
-      res.status(500).json({ message: 'Server error' });
-    }
-  });
-
-  // Save pair route
-  router.post('/save-pair', authMiddleware, async (req, res) => {
     const { pair } = req.body;
-    const userId = req.headers['x-user-id'];
 
-    if (!pair) {
-      return res.status(400).json({ message: 'Pair is required' });
+    console.log('Полученные данные:', { userId, pair, body: req.body, headers: req.headers });
+
+    if (!userId || !pair) {
+        return res.status(401).json({ message: 'Не авторизован: отсутствует x-user-id в заголовках' });
     }
 
     try {
-      const existingPair = await client.query(
-        'SELECT * FROM saved_pairs WHERE user_id = $1 AND pair = $2',
-        [userId, pair]
-      );
-      if (existingPair.rows.length > 0) {
-        return res.status(400).json({ message: 'Pair already saved' });
-      }
+        const normalizedPair = pair.replace('-', '/').toUpperCase();
+        console.log('Сохранение пары:', { userId, pair: normalizedPair });
 
-      await client.query(
-        'INSERT INTO saved_pairs (user_id, pair) VALUES ($1, $2)',
-        [userId, pair]
-      );
-      res.status(201).json({ message: 'Pair saved successfully' });
-    } catch (error) {
-      console.error('Save pair error:', error);
-      res.status(500).json({ message: 'Server error' });
-    }
-  });
-
-  // Saved pairs route
-  let cachedCoinData = null;
-  let lastFetchTime = 0;
-  const CACHE_DURATION = 1 * 60 * 1000; // 1 minute in milliseconds
-
-  router.get('/saved-pairs', authMiddleware, async (req, res) => {
-    const userId = req.user.id;
-
-    try {
-      const result = await client.query(
-        'SELECT pair FROM saved_pairs WHERE user_id = $1',
-        [userId]
-      );
-
-      const savedPairs = result.rows.map(row => row.pair);
-
-      if (savedPairs.length === 0) {
-        return res.json([]);
-      }
-
-      const baseCurrencies = savedPairs.map(pair => {
-        const [base] = pair.split('/');
-        return base.toLowerCase();
-      });
-
-      const now = Date.now();
-      if (!cachedCoinData || (now - lastFetchTime) > CACHE_DURATION) {
-        const response = await fetch(
-          'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1'
+        const existingPair = await client.query(
+            'SELECT * FROM saved_pairs WHERE user_id = $1 AND pair = $2',
+            [userId, normalizedPair]
         );
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch data from CoinGecko');
+        if (existingPair.rows.length > 0) {
+            console.log('Пара уже существует');
+            return res.status(200).json({ message: 'Пара уже сохранена' });
+        } else {
+            await client.query(
+                'INSERT INTO saved_pairs (user_id, pair) VALUES ($1, $2)',
+                [userId, normalizedPair]
+            );
+            console.log('Пара успешно добавлена');
+            return res.status(201).json({ message: 'Пара успешно сохранена' });
+        }
+    } catch (error) {
+        console.error('Ошибка при сохранении пары:', error.stack);
+        return res.status(500).json({ message: 'Ошибка при сохранении пары', error: error.message });
+    }
+});
+
+router.delete('/remove-pair', async (req, res) => {
+    const userId = req.headers['x-user-id'];
+    const { pair } = req.body;
+
+    console.log('Полученные данные для удаления:', { userId, pair });
+
+    if (!userId || !pair) {
+        return res.status(400).json({ message: 'Отсутствуют userId или pair' });
+    }
+
+    try {
+        const normalizedPair = pair.replace('-', '/').toUpperCase();
+        console.log('Удаление пары:', { userId, pair: normalizedPair });
+
+        const result = await client.query(
+            'DELETE FROM saved_pairs WHERE user_id = $1 AND pair = $2',
+            [userId, normalizedPair]
+        );
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({ message: 'Пара не найдена' });
         }
 
-        cachedCoinData = await response.json();
-        lastFetchTime = now;
-      }
+        console.log('Пара успешно удалена');
+        return res.status(200).json({ message: 'Пара успешно удалена' });
+    } catch (error) {
+        console.error('Ошибка при удалении пары:', error.stack);
+        return res.status(500).json({ message: 'Ошибка при удалении пары', error: error.message });
+    }
+});
 
-      const enrichedPairs = savedPairs.map(pair => {
-        const [base] = pair.split('/');
-        const coin = cachedCoinData.find(c => c.symbol.toLowerCase() === base.toLowerCase());
-        return {
-          pair,
-          coinData: coin || null
-        };
-      });
+  router.get('/saved-pairs', async (req, res) => {
+    const userId = req.headers['x-user-id'];
 
-      res.json(enrichedPairs);
+    if (!userId) {
+      return res.status(400).json({ message: 'Missing userId' });
+    }
+
+    try {
+      console.log('Fetching saved pairs for user:', userId);
+      const result = await client.query('SELECT pair FROM saved_pairs WHERE user_id = $1', [userId]);
+      const pairs = result.rows.map(row => ({
+        pair: row.pair
+      }));
+      res.status(200).json(pairs);
     } catch (error) {
       console.error('Error fetching saved pairs:', error);
-      res.status(500).json({ message: 'Ошибка сервера' });
+      res.status(500).json({ message: 'Error fetching saved pairs' });
     }
   });
 
-  // Chart data route
-  router.get('/chart-data', authMiddleware, async (req, res) => {
+  router.get('/chart-data', async (req, res) => {
     const { pair, timeframe } = req.query;
-    const userId = req.user.id;
+    const userId = req.headers['x-user-id'];
 
-    console.log('Chart data request:', { pair, timeframe, userId });
-
-    if (!pair || !timeframe) {
-      console.log('Missing pair or timeframe:', { pair, timeframe });
-      return res.status(400).json({ message: 'Pair and timeframe are required' });
+    if (!userId || !pair || !timeframe) {
+      return res.status(400).json({ message: 'Missing userId, pair, or timeframe' });
     }
+
+    const normalizedPair = pair.replace('-', '/').toUpperCase();
+    console.log('Chart data request:', { userId, pair: normalizedPair, timeframe });
 
     const validTimeframes = ['1m', '5m', '15m', '1h', '1d'];
     if (!validTimeframes.includes(timeframe)) {
@@ -183,25 +108,19 @@ module.exports = (client) => {
     }
 
     try {
-      // Map pair to Binance symbol
-      const [base, quote] = pair.split('/');
-      console.log('Extracted base and quote:', base, quote);
       const binanceSymbolMap = {
         'BTC/USD': 'BTCUSDT',
         'ETH/USD': 'ETHUSDT',
         'WBTC/USD': 'WBTCUSDT',
         'WSTETH/USD': 'WSTETHUSDT',
-        'AVAX/USD': 'AVAXUSDT',
-        'LINK/USD': 'LINKUSDT',
-        'TON/USD': 'TONUSDT'
+        'AVAX/USD': 'AVAXUSDT'
       };
-      const symbol = binanceSymbolMap[pair];
+      const symbol = binanceSymbolMap[normalizedPair];
       if (!symbol) {
-        console.log('Unsupported pair for Binance:', pair);
-        return res.status(400).json({ message: `Unsupported pair: ${pair}` });
+        console.log('Unsupported pair:', normalizedPair);
+        return res.status(400).json({ message: `Unsupported pair: ${normalizedPair}` });
       }
 
-      // Map timeframe to Binance interval
       const timeframeMap = {
         '1m': '1m',
         '5m': '5m',
@@ -210,119 +129,215 @@ module.exports = (client) => {
         '1d': '1d'
       };
       const interval = timeframeMap[timeframe];
+      const limit = 1000;
+      const endTime = Date.now();
+      const startTime = endTime - (limit * getTimeframeMillis(timeframe));
 
-      // Map timeframe to duration in minutes
-      const intervalDurationMap = {
-        '1m': 1,
-        '5m': 5,
-        '15m': 15,
-        '1h': 60,
-        '1d': 1440
-      };
-      const intervalDuration = intervalDurationMap[timeframe];
+      console.log('Fetching klines from Binance:', { symbol, interval, startTime, endTime, limit });
+      const response = await fetch(
+        `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&startTime=${startTime}&endTime=${endTime}&limit=${limit}`
+      );
 
-      // Calculate limit based on timeframe (more candles for 1m than 5m)
-      const limitMap = {
-        '1m': 4320,  // 3 days (4320 minutes)
-        '5m': 2880,  // 10 days (2880 * 5 minutes = 14400 minutes)
-        '15m': 960,  // 10 days (960 * 15 minutes = 14400 minutes)
-        '1h': 720,   // 30 days (720 hours)
-        '1d': 180    // 180 days
-      };
-      const desiredLimit = limitMap[timeframe];
-
-      // Binance API limit per request is 1000 candles
-      const maxLimitPerRequest = 1000;
-      let allData = [];
-      let remainingCandles = desiredLimit;
-      let endTime = Date.now();
-
-      while (remainingCandles > 0) {
-        const candlesToFetch = Math.min(remainingCandles, maxLimitPerRequest);
-        const startTime = endTime - (candlesToFetch * intervalDuration * 60 * 1000);
-
-        console.log('Fetching Binance data:', { symbol, interval, startTime, endTime, candlesToFetch });
-        const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&startTime=${Math.floor(startTime)}&endTime=${Math.floor(endTime)}&limit=${candlesToFetch}`;
-        console.log('Binance URL:', url);
-        const response = await fetch(url);
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.log('Binance fetch failed:', { status: response.status, errorText });
-          throw new Error(`Failed to fetch chart data from Binance: ${response.status} ${errorText}`);
-        }
-
-        const data = await response.json();
-        console.log(`Fetched ${data.length} candles, remaining: ${remainingCandles}`);
-
-        // Validate data
-        if (!Array.isArray(data) || data.length === 0) {
-          console.log('No more data available');
-          break;
-        }
-
-        allData = [...data, ...allData]; // Prepend data to maintain chronological order
-        remainingCandles -= data.length;
-        endTime = data[0][0] - 1; // Set endTime to the timestamp of the earliest candle minus 1ms
+      if (!response.ok) {
+        console.error('Binance API error:', response.status, response.statusText);
+        throw new Error('Failed to fetch data from Binance');
       }
 
-      console.log(`Total candles fetched: ${allData.length}`);
-      console.log('Raw Binance response (first 5):', allData.slice(0, 5));
-      console.log('Raw Binance response (last 5):', allData.slice(-5));
+      const data = await response.json();
+      console.log('Received klines:', data.length);
 
-      // Validate data
-      if (allData.length === 0) {
-        throw new Error('No data received from Binance');
-      }
+      const chartData = data.map(kline => ({
+        time: Math.floor(kline[0] / 1000),
+        open: parseFloat(kline[1]),
+        high: parseFloat(kline[2]),
+        low: parseFloat(kline[3]),
+        close: parseFloat(kline[4]),
+        volume: parseFloat(kline[5])
+      }));
 
-      // Format data for Lightweight Charts with validation
-      const chartData = allData.map(item => {
-        const [timestamp, open, high, low, close, volume] = item;
-        if (high === low) {
-          console.warn('High and low are equal for timestamp:', timestamp);
-        }
-        return {
-          time: Math.floor(parseInt(timestamp) / 1000),
-          open: parseFloat(open),
-          high: parseFloat(high),
-          low: parseFloat(low),
-          close: parseFloat(close),
-          volume: parseFloat(volume)
-        };
-      });
-
-      console.log('Formatted chart data (first 5):', chartData.slice(0, 5));
-      console.log('Formatted chart data (last 5):', chartData.slice(-5));
-      res.json(chartData);
+      res.status(200).json(chartData);
     } catch (error) {
-      console.error('Error fetching chart data:', error.message, error.stack);
-      res.status(500).json({ message: `Ошибка сервера: ${error.message}` });
+      console.error('Error fetching chart data:', error);
+      res.status(500).json({ message: 'Error fetching chart data' });
     }
   });
 
-  // Remove pair route
-  router.delete('/remove-pair', authMiddleware, async (req, res) => {
-    const { pair } = req.body;
+  router.get('/chart-data-stream', async (req, res) => {
+    const { pair, timeframe } = req.query;
     const userId = req.headers['x-user-id'];
 
-    if (!pair) {
-      return res.status(400).json({ message: 'Pair is required' });
+    if (!userId || !pair || !timeframe) {
+      console.error('Stream request missing parameters:', { userId, pair, timeframe });
+      return res.status(400).json({ message: 'Missing userId, pair, or timeframe' });
+    }
+
+    const normalizedPair = pair.replace('-', '/').toUpperCase();
+    console.log('Chart data stream request:', { userId, pair: normalizedPair, timeframe });
+
+    const validTimeframes = ['1m', '5m', '15m', '1h', '1d'];
+    if (!validTimeframes.includes(timeframe)) {
+      console.error('Invalid timeframe:', timeframe);
+      return res.status(400).json({ message: 'Invalid timeframe. Use: 1m, 5m, 15m, 1h, 1d' });
     }
 
     try {
-      const result = await client.query(
-        'DELETE FROM saved_pairs WHERE user_id = $1 AND pair = $2',
-        [userId, pair]
-      );
-      if (result.rowCount === 0) {
-        return res.status(404).json({ message: 'Pair not found' });
+      const binanceSymbolMap = {
+        'BTC/USD': 'BTCUSDT',
+        'ETH/USD': 'ETHUSDT',
+        'WBTC/USD': 'WBTCUSDT',
+        'WSTETH/USD': 'WSTETHUSDT',
+        'AVAX/USD': 'AVAXUSDT'
+      };
+      const symbol = binanceSymbolMap[normalizedPair];
+      if (!symbol) {
+        console.error('Unsupported pair:', normalizedPair);
+        return res.status(400).json({ message: `Unsupported pair: ${normalizedPair}` });
       }
-      res.json({ message: 'Pair removed successfully' });
+
+      const userResult = await client.query('SELECT * FROM users WHERE id = $1', [userId]);
+      if (userResult.rows.length === 0) {
+        console.error('Unauthorized: User not found for userId:', userId);
+        return res.status(401).json({ message: 'Unauthorized: User not found' });
+      }
+
+      console.log('Stream initiated for:', { userId, pair: normalizedPair, timeframe });
+      res.status(200).json({ message: 'Stream initiated', pair: normalizedPair, timeframe, userId });
     } catch (error) {
-      console.error('Remove pair error:', error);
-      res.status(500).json({ message: 'Server error' });
+      console.error('Error initiating stream:', error);
+      res.status(500).json({ message: 'Error initiating stream' });
     }
   });
+
+  const subscriptions = new Map();
+
+  wss.on('connection', (ws, req) => {
+    console.log('WebSocket client connected');
+
+    ws.on('message', (message) => {
+      try {
+        console.log('Received WebSocket message:', message.toString());
+        const data = JSON.parse(message);
+        const { userId, pair, timeframe } = data;
+        console.log('Subscription request:', { userId, pair, timeframe });
+
+        if (!userId || !pair || !timeframe) {
+          console.error('Invalid subscription: Missing userId, pair, or timeframe');
+          ws.send(JSON.stringify({ error: 'Missing userId, pair, or timeframe' }));
+          return;
+        }
+
+        const normalizedPair = pair.replace('-', '/').toUpperCase();
+        client.query('SELECT * FROM users WHERE id = $1', [userId])
+          .then(userResult => {
+            if (userResult.rows.length === 0) {
+              console.error('Unauthorized: User not found for userId:', userId);
+              ws.send(JSON.stringify({ error: 'Unauthorized: User not found' }));
+              ws.close();
+              return;
+            }
+
+            const binanceSymbolMap = {
+              'BTC/USD': 'BTCUSDT',
+              'ETH/USD': 'ETHUSDT',
+              'WBTC/USD': 'WBTCUSDT',
+              'WSTETH/USD': 'WSTETHUSDT',
+              'AVAX/USD': 'AVAXUSDT'
+            };
+            const symbol = binanceSymbolMap[normalizedPair];
+            if (!symbol) {
+              console.error('Unsupported pair:', normalizedPair);
+              ws.send(JSON.stringify({ error: `Unsupported pair: ${normalizedPair}` }));
+              return;
+            }
+
+            const validTimeframes = ['1m', '5m', '15m', '1h', '1d'];
+            if (!validTimeframes.includes(timeframe)) {
+              console.error('Invalid timeframe:', timeframe);
+              ws.send(JSON.stringify({ error: `Invalid timeframe: ${timeframe}` }));
+              return;
+            }
+
+            const streamKey = `${userId}_${normalizedPair}_${timeframe}`;
+            if (subscriptions.has(streamKey)) {
+              console.log(`Closing existing subscription for ${streamKey}`);
+              subscriptions.get(streamKey).close();
+            }
+
+            function connectBinance() {
+              console.log(`Connecting to Binance WebSocket for ${streamKey}`);
+              const binanceWs = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@kline_${timeframe}`);
+              subscriptions.set(streamKey, binanceWs);
+
+              binanceWs.on('open', () => {
+                console.log(`Binance WebSocket opened for ${streamKey}`);
+              });
+
+              binanceWs.on('message', (data) => {
+                const msg = JSON.parse(data);
+                console.log(`Binance WebSocket message for ${streamKey}:`, msg);
+                if (msg.e === 'kline') {
+                  const kline = msg.k;
+                  const candle = {
+                    time: Math.floor(kline.t / 1000),
+                    open: parseFloat(kline.o),
+                    high: parseFloat(kline.h),
+                    low: parseFloat(kline.l),
+                    close: parseFloat(kline.c),
+                    volume: parseFloat(kline.v),
+                    isClosed: kline.x
+                  };
+                  console.log(`Sending kline to client for ${streamKey}:`, candle);
+                  ws.send(JSON.stringify({ type: 'kline', candle }));
+                }
+              });
+
+              binanceWs.on('error', (error) => {
+                console.error(`Binance WebSocket error for ${streamKey}:`, error.message);
+              });
+
+              binanceWs.on('close', () => {
+                console.log(`Binance WebSocket closed for ${streamKey}, reconnecting in 5s...`);
+                subscriptions.delete(streamKey);
+                setTimeout(connectBinance, 5000);
+              });
+            }
+
+            connectBinance();
+
+            ws.on('close', () => {
+              console.log(`Client WebSocket closed for ${streamKey}`);
+              if (subscriptions.has(streamKey)) {
+                subscriptions.get(streamKey).close();
+                subscriptions.delete(streamKey);
+              }
+            });
+          })
+          .catch(error => {
+            console.error('Error validating user for WebSocket:', error);
+            ws.send(JSON.stringify({ error: 'Server error' }));
+            ws.close();
+          });
+      } catch (error) {
+        console.error('WebSocket message error:', error);
+        ws.send(JSON.stringify({ error: 'Invalid message format' }));
+      }
+    });
+
+    ws.on('error', (error) => {
+      console.error('WebSocket client error:', error);
+    });
+  });
+
+  function getTimeframeMillis(timeframe) {
+    const timeframeMap = {
+      '1m': 60 * 1000,
+      '5m': 5 * 60 * 1000,
+      '15m': 15 * 60 * 1000,
+      '1h': 60 * 60 * 1000,
+      '1d': 24 * 60 * 60 * 1000
+    };
+    return timeframeMap[timeframe] || 60 * 60 * 1000;
+  }
 
   return router;
 };

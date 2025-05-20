@@ -1,4 +1,3 @@
-/* Reset and base styles for navigation */
 * {
     margin: 0;
     padding: 0;
@@ -12,7 +11,6 @@ body {
     line-height: 1.6;
 }
 
-/* Header and Navigation */
 .header {
     display: flex;
     justify-content: space-between;
@@ -45,7 +43,6 @@ body {
     color: #a0b0ff;
 }
 
-/* Dropdown Styles */
 .profile-dropdown {
     position: relative;
 }
@@ -98,7 +95,6 @@ body {
     color: #ffffff;
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
     .header {
         flex-direction: column;

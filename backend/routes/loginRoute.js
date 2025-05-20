@@ -3,7 +3,6 @@ const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
 const router = express.Router();
 
-// Настройка Nodemailer
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -12,11 +11,9 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// Временное хранилище кодов (в реальном проекте используйте Redis или БД)
 const resetCodes = new Map();
 
 module.exports = (client) => {
-  // Роут для отправки кода на email
   router.post('/forgot-password', async (req, res) => {
     const { email } = req.body;
 
@@ -27,13 +24,12 @@ module.exports = (client) => {
       }
 
       const userId = result.rows[0].id;
-      const code = Math.floor(100000 + Math.random() * 900000).toString(); // 6-значный код
-      resetCodes.set(userId, code); // Сохраняем код
+      const code = Math.floor(100000 + Math.random() * 900000).toString(); 
+      resetCodes.set(userId, code); 
 
-      // Set a timeout to remove the reset code after 10 minutes
       setTimeout(() => {
         resetCodes.delete(userId);
-      }, 10 * 60 * 1000); // 10 minutes
+      }, 10 * 60 * 1000); 
 
       const mailOptions = {
         from: process.env.EMAIL_USER || 'galimzanovrizat69@gmail.com',
@@ -50,7 +46,6 @@ module.exports = (client) => {
     }
   });
 
-  // Роут для сброса пароля
   router.post('/reset-password', async (req, res) => {
     const { code, password } = req.body;
 
@@ -71,9 +66,9 @@ module.exports = (client) => {
         return res.status(400).json({ message: 'Неверный или истекший код' });
       }
 
-      const hashedPassword = await bcrypt.hash(password, 8); // Use async/await for consistency
+      const hashedPassword = await bcrypt.hash(password, 8);
       await client.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hashedPassword, userId]);
-      resetCodes.delete(userId); // Удаляем код после использования
+      resetCodes.delete(userId); 
 
       res.json({ message: 'Пароль успешно изменен' });
     } catch (error) {
@@ -82,7 +77,6 @@ module.exports = (client) => {
     }
   });
 
-  // Роут для логина
   router.post('/login', async (req, res) => {
     const { username, password } = req.body;
 
@@ -101,7 +95,7 @@ module.exports = (client) => {
       }
 
       const user = result.rows[0];
-      const isPasswordValid = await bcrypt.compare(password, user.password); // Use async/await
+      const isPasswordValid = await bcrypt.compare(password, user.password); 
       if (!isPasswordValid) {
         return res.status(400).json({ message: 'Неверный пароль' });
       }
